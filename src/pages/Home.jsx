@@ -63,34 +63,5 @@ export const Home = () => {
         </Grid>
       </Grid>
     </Box>
-
-    // <Container>
-    //   <Row>
-    //     <h3>To Do List</h3>
-    //   </Row>
-    //   <Row>
-    //     <Col lg="10">
-    //       <Form.Control
-    //         type="text"
-    //         placeholder="Type a task here..."
-    //         value={taskTitle}
-    //         onChange={taskChangeHdlr}
-    //       />
-    //     </Col>
-    //     <Col lg="2">
-    //       {" "}
-    //       <Button variant="outline-primary" onClick={addTask}>
-    //         Add a task
-    //       </Button>{" "}
-    //     </Col>
-    //   </Row>
-    //   <Row>
-    //     <List>
-    //       {tasks.map((task, index) => (
-    //         <ListItem key={index}>{task.title}</ListItem>
-    //       ))}
-    //     </List>
-    //   </Row>
-    // </Container>
   );
 };
