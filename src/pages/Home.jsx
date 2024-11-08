@@ -1,11 +1,11 @@
-import { useState } from "react";
-
+import { useState, useEffect } from "react";
+import { Form, Row, Container, Col, Button, ListGroup } from "react-bootstrap";
 import Grid from "@mui/material/Grid2";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import Paper from "@mui/material/Paper";
 import { styled } from "@mui/material/styles";
-import { TextField, Box, Button } from "@mui/material";
+
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: "#fff",
   ...theme.typography.body2,
@@ -19,49 +19,150 @@ const Item = styled(Paper)(({ theme }) => ({
 
 export const Home = () => {
   const [tasks, setTasks] = useState([]);
-  const [taskTitle, setTaskTitle] = useState("");
-
-  const taskChangeHdlr = (event) => {
-    console.log(event.target.value);
-    setTaskTitle(event.target.value);
-    console.log(taskTitle);
-    //inputTask.title = event.target.value;
-  };
+  const [completedTasks, setCompletedTasks] = useState([]);
+  const [todos, setTodos] = useState([]);
+  const [task, setTask] = useState({
+    id: 0,
+    title: "",
+    isCompleted: false,
+    notes: [],
+    dueDate: "",
+    isPriority: false,
+    priorityNo: null,
+  });
 
   const addTask = () => {
-    setTasks([...tasks, { title: taskTitle, isCompleted: false, notes: [] }]);
-    setTaskTitle("");
+    setTasks((oldTasks) => {
+      return [
+        ...oldTasks,
+        { ...task, id: crypto.randomUUID(), title: task.title },
+      ];
+    });
+    setTask({
+      id: 0,
+      title: "",
+      isCompleted: false,
+      notes: [],
+      dueDate: "",
+      isPriority: false,
+      priorityNo: null,
+    });
   };
+
+  const onTaskSubmit = (e) => {
+    e.preventDefault();
+  };
+
+  const taskCompleted = (e, tsk) => {
+    setTasks((oldtasks) => {
+      let newTasks = oldtasks.map((item) => {
+        if (item.id === tsk.id) {
+          return { ...item, isCompleted: e.target.checked };
+        } else {
+          return item;
+        }
+      });
+
+      return newTasks;
+    });
+  };
+
+  const updateTaskHandler = () => {
+    const updatedTodos = tasks.filter((item) => item.isCompleted === false);
+    setTodos(updatedTodos);
+    const newCompletedTasks = tasks.filter((item) => item.isCompleted === true);
+    setCompletedTasks(newCompletedTasks);
+  };
+
+  console.log("tasks : " + JSON.stringify(tasks));
+  console.log("completedTasks : " + JSON.stringify(completedTasks));
+
+  useEffect(() => {
+    updateTaskHandler();
+  }, [tasks]);
   return (
-    <Box>
-      <Grid container spacing={2}>
-        <Grid size={12}>
-          <h3>To Do List</h3>
-        </Grid>
-        <Grid size={8}>
-          <TextField
-            id="outlined-password-input"
-            label="Enter task here"
-            type="text"
-            fullWidth
-            value={taskTitle}
-            onChange={taskChangeHdlr}
-            color="primary"
-          />
-        </Grid>
-        <Grid size={4}>
-          <Button variant="outlined" onClick={addTask}>
-            Add a task
-          </Button>
-        </Grid>
-        <Grid size={12}>
-          <List>
-            {tasks.map((task, index) => (
-              <ListItem key={index}>{task.title}</ListItem>
-            ))}
-          </List>
-        </Grid>
-      </Grid>
-    </Box>
+    <>
+      <Form onSubmit={onTaskSubmit}>
+        <Container fluid>
+          <Row>
+            <Col xs={10}>
+              <Form.Group
+                className="mb-3"
+                controlId="exampleForm.ControlInput1"
+              >
+                <Form.Control
+                  type="text"
+                  value={task.title}
+                  placeholder="Enter a task here"
+                  onChange={(e) => {
+                    setTask({ ...task, title: e.target.value });
+                  }}
+                />
+              </Form.Group>
+            </Col>
+            <Col xs={2}>
+              {" "}
+              <Button variant="light" onClick={addTask}>
+                Add a task
+              </Button>
+            </Col>
+          </Row>
+        </Container>
+      </Form>
+      <Container>
+        {completedTasks && completedTasks?.length != 0 && <h5> To do</h5>}
+        <ListGroup>
+          {todos.map((item, index) => (
+            <ListGroup.Item key={index}>
+              {" "}
+              <Row key={index}>
+                <Col lg={1}>
+                  <Form.Check // prettier-ignore
+                    type="checkbox"
+                    id="default-checkbox"
+                    label=""
+                    checked={item.isCompleted}
+                    onChange={(e) => taskCompleted(e, item)}
+                  />
+                </Col>
+
+                <Col lg={8}> {item.title} </Col>
+                <Col lg={3}>
+                  <Button variant="outline-secondary">Edit</Button>{" "}
+                  <Button variant="outline-secondary">Priority</Button>{" "}
+                  <Button variant="outline-secondary">Delete</Button>
+                </Col>
+              </Row>
+            </ListGroup.Item>
+          ))}
+        </ListGroup>
+      </Container>
+
+      <Container>
+        {completedTasks && completedTasks?.length != 0 && (
+          <h5> Completed Tasks</h5>
+        )}
+
+        <ListGroup>
+          {completedTasks.map((item, index) => (
+            <ListGroup.Item key={index}>
+              {" "}
+              <Row key={index}>
+                <Col xs={1}>
+                  <Form.Check // prettier-ignore
+                    type="checkbox"
+                    id="default-checkbox"
+                    label=""
+                    checked={item.isCompleted}
+                    onChange={(e) => taskCompleted(e, item)}
+                  />
+                </Col>
+                {item.title}{" "}
+              </Row>
+            </ListGroup.Item>
+          ))}
+        </ListGroup>
+      </Container>
+    </>
   );
 };
