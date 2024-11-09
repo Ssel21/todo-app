@@ -137,23 +137,15 @@ export const Home = () => {
     let itemIndex;
     const toPrioritize = todos.find((item, index) => {
       if (item.id === tsk.id) {
-        console.log("indes is : " + index);
         itemIndex = index;
         return item;
       }
     });
-    console.log("prioritize : " + JSON.stringify(toPrioritize));
 
     const tempTodos = todos.splice(itemIndex, 1);
-    console.log("tempTodos : " + JSON.stringify(tempTodos));
-    console.log("todos : " + JSON.stringify(todos));
     todos.splice(0, 0, toPrioritize);
     let newTodos = [...todos];
     setTodos(newTodos);
-
-    console.log(
-      "should be updated to first element : " + JSON.stringify(todos)
-    );
   };
 
   return (
