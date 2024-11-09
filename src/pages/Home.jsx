@@ -1,52 +1,59 @@
-import { useState, useEffect } from "react";
-import { Form, Row, Container, Col, Button, ListGroup } from "react-bootstrap";
-import Grid from "@mui/material/Grid2";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import Paper from "@mui/material/Paper";
-import { styled } from "@mui/material/styles";
-
-const Item = styled(Paper)(({ theme }) => ({
-  backgroundColor: "#fff",
-  ...theme.typography.body2,
-  padding: theme.spacing(1),
-  textAlign: "center",
-  color: theme.palette.text.secondary,
-  ...theme.applyStyles("dark", {
-    backgroundColor: "#1A2027",
-  }),
-}));
+import { useState } from "react";
+import {
+  Form,
+  Row,
+  Container,
+  Col,
+  Button,
+  ListGroup,
+  Modal,
+} from "react-bootstrap";
 
 export const Home = () => {
-  const [tasks, setTasks] = useState([]);
-  const [completedTasks, setCompletedTasks] = useState([]);
+  const [editModal, setEditModal] = useState(false);
+  const [completedTodos, setCompletedTodos] = useState([]);
   const [todos, setTodos] = useState([]);
   const [task, setTask] = useState({
     id: 0,
     title: "",
     isCompleted: false,
-    notes: [],
+    notes: "",
+    dueDate: "",
+    isPriority: false,
+    priorityNo: null,
+  });
+
+  const [editTask, setEditTask] = useState({
+    id: 0,
+    title: "",
+    isCompleted: false,
+    notes: "",
     dueDate: "",
     isPriority: false,
     priorityNo: null,
   });
 
   const addTask = () => {
-    setTasks((oldTasks) => {
-      return [
-        ...oldTasks,
-        { ...task, id: crypto.randomUUID(), title: task.title },
-      ];
-    });
-    setTask({
-      id: 0,
-      title: "",
-      isCompleted: false,
-      notes: [],
-      dueDate: "",
-      isPriority: false,
-      priorityNo: null,
-    });
+    const isTitleEmpty = checkifEmpty(task.title);
+    if (isTitleEmpty) {
+      alert("Please enter a task!");
+    } else {
+      setTodos((oldTodos) => {
+        return [
+          ...oldTodos,
+          { ...task, id: crypto.randomUUID(), title: task.title },
+        ];
+      });
+      setTask({
+        id: 0,
+        title: "",
+        isCompleted: false,
+        notes: [],
+        dueDate: "",
+        isPriority: false,
+        priorityNo: null,
+      });
+    }
   };
 
   const onTaskSubmit = (e) => {
@@ -54,32 +61,101 @@ export const Home = () => {
   };
 
   const taskCompleted = (e, tsk) => {
-    setTasks((oldtasks) => {
-      let newTasks = oldtasks.map((item) => {
-        if (item.id === tsk.id) {
-          return { ...item, isCompleted: e.target.checked };
-        } else {
-          return item;
-        }
-      });
+    let completedItem;
+    let itemIndex;
 
-      return newTasks;
+    todos.map((item, index) => {
+      if (item.id === tsk.id) {
+        //get current task value from list
+        completedItem = { ...item, isCompleted: true };
+        //get task index
+        itemIndex = index;
+      }
+    });
+    //remove item completed from todos
+    todos.splice(itemIndex, 1);
+    //add item completed to completed todos
+    completedTodos.splice(completedTodos.length, 0, completedItem);
+    //update list of todos and completed todos
+    setTodos([...todos]);
+    setCompletedTodos([...completedTodos]);
+  };
+
+  console.log("todos : " + JSON.stringify(todos));
+  console.log("completedTodos : " + JSON.stringify(completedTodos));
+
+  const checkifEmpty = (value) => {
+    return (
+      value == null || (typeof value === "string" && value.trim().length === 0)
+    );
+  };
+
+  const handleEditModal = (id, state) => {
+    //filter task to edit
+    const toEdit = todos.find((tsk) => tsk.id === id);
+    switch (state) {
+      case "close":
+        setEditModal(false);
+        break;
+      case "open":
+        setEditTask(toEdit);
+        setEditModal(true);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const saveTodoChanges = () => {
+    setTodos((oldTodos) => {
+      return oldTodos.map((item) => {
+        if (item.id === editTask.id) {
+          return { ...item, dueDate: editTask.dueDate, notes: editTask.notes };
+        }
+        return item;
+      });
+    });
+    setEditModal(false);
+    setEditTask({
+      id: 0,
+      title: "",
+      isCompleted: false,
+      notes: "",
+      dueDate: "",
+      isPriority: false,
+      priorityNo: null,
     });
   };
 
-  const updateTaskHandler = () => {
-    const updatedTodos = tasks.filter((item) => item.isCompleted === false);
-    setTodos(updatedTodos);
-    const newCompletedTasks = tasks.filter((item) => item.isCompleted === true);
-    setCompletedTasks(newCompletedTasks);
+  const deleteTodo = (tsk) => {
+    const filteredTodos = todos.filter((item) => item.id !== tsk.id);
+    setTodos(filteredTodos);
+    alert(`Task  ${tsk.title} "deleted!`);
   };
 
-  console.log("tasks : " + JSON.stringify(tasks));
-  console.log("completedTasks : " + JSON.stringify(completedTasks));
+  const setAsPriority = (tsk) => {
+    let itemIndex;
+    const toPrioritize = todos.find((item, index) => {
+      if (item.id === tsk.id) {
+        console.log("indes is : " + index);
+        itemIndex = index;
+        return item;
+      }
+    });
+    console.log("prioritize : " + JSON.stringify(toPrioritize));
 
-  useEffect(() => {
-    updateTaskHandler();
-  }, [tasks]);
+    const tempTodos = todos.splice(itemIndex, 1);
+    console.log("tempTodos : " + JSON.stringify(tempTodos));
+    console.log("todos : " + JSON.stringify(todos));
+    todos.splice(0, 0, toPrioritize);
+    let newTodos = [...todos];
+    setTodos(newTodos);
+
+    console.log(
+      "should be updated to first element : " + JSON.stringify(todos)
+    );
+  };
+
   return (
     <>
       <Form onSubmit={onTaskSubmit}>
@@ -97,6 +173,11 @@ export const Home = () => {
                   onChange={(e) => {
                     setTask({ ...task, title: e.target.value });
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      addTask();
+                    }
+                  }}
                 />
               </Form.Group>
             </Col>
@@ -110,27 +191,47 @@ export const Home = () => {
         </Container>
       </Form>
       <Container>
-        {completedTasks && completedTasks?.length != 0 && <h5> To do</h5>}
+        {todos && todos?.length != 0 && <h5> To do</h5>}
         <ListGroup>
           {todos.map((item, index) => (
             <ListGroup.Item key={index}>
               {" "}
               <Row key={index}>
-                <Col lg={1}>
+                <Col xs={1} md={1} lg={1}>
                   <Form.Check // prettier-ignore
                     type="checkbox"
                     id="default-checkbox"
                     label=""
                     checked={item.isCompleted}
                     onChange={(e) => taskCompleted(e, item)}
+                    onPointerDown={(e) => e.currentTarget.blur()}
+                    key={index}
                   />
                 </Col>
 
-                <Col lg={8}> {item.title} </Col>
-                <Col lg={3}>
-                  <Button variant="outline-secondary">Edit</Button>{" "}
-                  <Button variant="outline-secondary">Priority</Button>{" "}
-                  <Button variant="outline-secondary">Delete</Button>
+                <Col xs={8} md={8} lg={8}>
+                  {" "}
+                  {item.title}{" "}
+                </Col>
+                <Col xs={3} md={3} lg={3}>
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() => handleEditModal(item.id, "open")}
+                  >
+                    Edit
+                  </Button>{" "}
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() => setAsPriority(item)}
+                  >
+                    Priority
+                  </Button>{" "}
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() => deleteTodo(item)}
+                  >
+                    Delete
+                  </Button>
                 </Col>
               </Row>
             </ListGroup.Item>
@@ -139,12 +240,12 @@ export const Home = () => {
       </Container>
 
       <Container>
-        {completedTasks && completedTasks?.length != 0 && (
+        {completedTodos && completedTodos?.length != 0 && (
           <h5> Completed Tasks</h5>
         )}
 
         <ListGroup>
-          {completedTasks.map((item, index) => (
+          {completedTodos.map((item, index) => (
             <ListGroup.Item key={index}>
               {" "}
               <Row key={index}>
@@ -155,6 +256,7 @@ export const Home = () => {
                     label=""
                     checked={item.isCompleted}
                     onChange={(e) => taskCompleted(e, item)}
+                    key={index}
                   />
                 </Col>
                 {item.title}{" "}
@@ -163,6 +265,70 @@ export const Home = () => {
           ))}
         </ListGroup>
       </Container>
+
+      <Modal
+        show={editModal}
+        onHide={() => handleEditModal(editTask.id, "close")}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Edit {editTask.title}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Container>
+              <Row>
+                <Form.Group className="mb-3">
+                  <Form.Label>Due Date</Form.Label>
+                  <Form.Control
+                    type="date"
+                    placeholder="mm/dd/yyyy"
+                    value={editTask.dueDate}
+                    onChange={(e) => {
+                      setEditTask({
+                        ...editTask,
+                        dueDate: e.currentTarget.value,
+                      });
+                      console.log(
+                        "due date selected : " + e.currentTarget.value
+                      );
+                    }}
+                  />
+                </Form.Group>
+              </Row>
+              <Row>
+                <Form.Group className="mb-3">
+                  <Form.Label>Notes</Form.Label>
+                  <Form.Control
+                    as="textarea"
+                    aria-label="Enter your notes here..."
+                    value={editTask.notes}
+                    onChange={(e) => {
+                      setEditTask({
+                        ...editTask,
+                        notes: e.currentTarget.value,
+                      });
+                      console.log(
+                        "here is the notes : " + e.currentTarget.value
+                      );
+                    }}
+                  />
+                </Form.Group>
+              </Row>
+            </Container>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => handleEditModal(editTask, "close")}
+          >
+            Close
+          </Button>
+          <Button variant="primary" onClick={saveTodoChanges}>
+            Save Changes
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </>
   );
 };
